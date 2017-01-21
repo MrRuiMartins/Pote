@@ -3,30 +3,33 @@
 Mediator
 ----------------
 Entity:
-    * Id
+* Id
 
 Actions:
-    * Insert challenge
+* Insert challenge
 
+-----------------
 Hunter
 --------------------
 Entity:
-    * Id
+* Id
 
 Actions:
-    * Solve Challenge
+* Solve Challenge
 
+----------------------------------
 Challenge
 ----------------------
 Entity:
-    * Hash Solution
-    * Challenge Description
-    * Reward (points for now)
-    * MediatorId
+* Hash Solution
+* Challenge Description
+* Reward (points for now)
+* MediatorId
 
 Actions:
-    * Get Challenges
+* Get Challenges
 
+-----------------
 About
 ----------------
 
