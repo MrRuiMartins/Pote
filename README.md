@@ -20,11 +20,13 @@ The goal of Hunters is to collect tokens.
 When a hunter finds a token location, a challenge appears that if successfuly solved will be redeemed in tokens.
 
 Mediators are external actors that can add challenges (and token locations) to the system.
- These challenges are external useful computational challenges.
+These challenges are human only challenges.
 
 Upon catching a Hunter, the Catcher has the option to include a transaction in the next blockchain block.
 
 Upon completion of a challenge the outcome is reported in a trust chain via blockchain technology.
+
+The challenge can be donating to distributed computing projects.
 
 -------------------------
 
