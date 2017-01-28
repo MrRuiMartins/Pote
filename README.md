@@ -11,9 +11,6 @@ Use docker to tie it all together.
 Gameplay
 ------------------------
 
-There are three types of roles in Pote: Catchers and Hunters, and Mediators.
-
-The goal of Catchers is to find Hunters.
 
 The goal of Hunters is to collect tokens.
 
@@ -32,6 +29,9 @@ The challenge can be donating to distributed computing projects.
 
 Motivation for each actor
 ---------------
+* Mediators want some computation performed.
+* Hunters want tokens in order to have a high ranking in the blockchain contributor list.
+----------------------
 
 * Mediators want some computation performed.
 * Hunters want tokens in order to have a high ranking in the blockchain contributor list.
