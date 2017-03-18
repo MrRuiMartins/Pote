@@ -5,9 +5,15 @@ namespace Pote.ServiceInterface
 {
     public class MediatorService : Service
     {
+
         public object Post(Mediator request)
         {
-            return new MediatorResponse {
+            //using (var db = dbFactory.Open())
+            //{
+            //}
+
+            return new MediatorResponse
+            {
                 Id = 3
             };
         }

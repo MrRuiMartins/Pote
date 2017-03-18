@@ -6,6 +6,8 @@ using Microsoft.Extensions.Logging;
 using Funq;
 using ServiceStack;
 using Pote.ServiceInterface;
+using ServiceStack.Data;
+using ServiceStack.OrmLite;
 
 namespace Pote
 {
@@ -45,6 +47,9 @@ namespace Pote
         /// </summary>
         public override void Configure(Container container)
         {
+
+            container.Register<IDbConnectionFactory>(c => 
+                new OrmLiteConnectionFactory(":memory:", SqliteDialect.Provider)); //InMemory Sqlite DB
             //Config examples
             //this.Plugins.Add(new PostmanFeature());
             //this.Plugins.Add(new CorsFeature());
