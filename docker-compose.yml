@@ -1,0 +1,11 @@
+version: '2'
+services:
+  db:
+    image: mariadb:10.1
+    environment:
+      MYSQL_ROOT_PASSWORD: toor
+      MYSQL_DATABASE: Pote
+      MYSQL_USER: potepote
+      MYSQL_PASSWORD: 123456
+    ports:
+      - "3306:3306"
