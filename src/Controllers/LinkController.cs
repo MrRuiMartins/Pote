@@ -26,6 +26,7 @@ namespace src.Controllers
             // log the entry
             using (var db = new InterestingLinkContext(_configuration))
             {
+				db.Database.EnsureCreated();
                 var link = new InterestingLink{
                     Url = url,
                     CreatedAt = DateTimeOffset.UtcNow
