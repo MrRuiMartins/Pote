@@ -8,7 +8,7 @@ using src.DbModels;
 
 namespace src.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     public class LinkController : Controller
     {
         private readonly IConfigurationRoot _configuration;
@@ -26,6 +26,7 @@ namespace src.Controllers
             // log the entry
             using (var db = new InterestingLinkContext(_configuration))
             {
+				db.Database.EnsureCreated();
                 var link = new InterestingLink{
                     Url = url,
                     CreatedAt = DateTimeOffset.UtcNow
@@ -35,7 +36,20 @@ namespace src.Controllers
                 db.SaveChanges();
             }
             // report everything went fine
-            return new OkResult();      
+            return new OkResult();
         }
+
+		[HttpGet("")]
+		public IEnumerable<InterestingLink> Get()
+		{
+			List<InterestingLink> links;
+			// log the entry
+            using (var db = new InterestingLinkContext(_configuration))
+            {                
+                links = db.Links.Where(l => l.CreatedAt >= DateTime.MinValue).ToList();
+            }
+
+			return links;
+		}
     }
 }
