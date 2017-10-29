@@ -8,7 +8,7 @@ using src.DbModels;
 
 namespace src.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     public class LinkController : Controller
     {
         private readonly IConfigurationRoot _configuration;

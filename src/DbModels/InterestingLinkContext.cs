@@ -6,12 +6,12 @@ namespace src.DbModels
 {
     public class InterestingLinkContext : DbContext
     {
-        private readonly IConfigurationRoot _configuration;
+		private readonly IConfigurationRoot _configuration;
 
         public InterestingLinkContext(IConfigurationRoot configuration)
-        {
-            _configuration = configuration;
-        }
+		{
+			_configuration = configuration;
+		}
         public DbSet<InterestingLink> Links { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
