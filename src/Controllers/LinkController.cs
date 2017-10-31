@@ -39,11 +39,8 @@ namespace src.Controllers
 		[HttpGet("")]
 		public IEnumerable<InterestingLink> Get()
 		{
-			List<InterestingLink> links;
 			// log the entry
-			links = db.Links.Where(l => l.CreatedAt >= DateTime.MinValue).ToList();
-
-			return links;
+			return db.GetAllLinks();
 		}
     }
 }
