@@ -6,17 +6,9 @@ namespace src.DbModels
 {
     public class InterestingLinkContext : DbContext
     {
-		private readonly IConfigurationRoot _configuration;
-
-        public InterestingLinkContext(IConfigurationRoot configuration)
-		{
-			_configuration = configuration;
-		}
+		public InterestingLinkContext(DbContextOptions<InterestingLinkContext> options)
+        : base(options)
+    	{ }
         public DbSet<InterestingLink> Links { get; set; }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseMySql(_configuration.GetConnectionString("PoteDatabase"));
-        }
     }
 }

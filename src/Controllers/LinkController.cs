@@ -11,30 +11,27 @@ namespace src.Controllers
     [Route("[controller]")]
     public class LinkController : Controller
     {
-        private readonly IConfigurationRoot _configuration;
+		private readonly InterestingLinkContext db;
 
-        public LinkController(
-            IConfigurationRoot Configuration
+		public LinkController(
+			InterestingLinkContext dbContext
         )
         {
-            _configuration = Configuration;
-        }
+			this.db = dbContext;
+		}
         // Post api/links/{url}
         [HttpPost("{url}")]
         public IActionResult Post(string url)
         {
             // log the entry
-            using (var db = new InterestingLinkContext(_configuration))
-            {
-				db.Database.EnsureCreated();
-                var link = new InterestingLink{
-                    Url = url,
-                    CreatedAt = DateTimeOffset.UtcNow
-                };
-                
-                db.Links.Add(link);
-                db.SaveChanges();
-            }
+			db.Database.EnsureCreated();
+			var link = new InterestingLink{
+				Url = url,
+				CreatedAt = DateTimeOffset.UtcNow
+			};
+			
+			db.Links.Add(link);
+			db.SaveChanges();
             // report everything went fine
             return new OkResult();
         }
@@ -44,10 +41,7 @@ namespace src.Controllers
 		{
 			List<InterestingLink> links;
 			// log the entry
-            using (var db = new InterestingLinkContext(_configuration))
-            {                
-                links = db.Links.Where(l => l.CreatedAt >= DateTime.MinValue).ToList();
-            }
+			links = db.Links.Where(l => l.CreatedAt >= DateTime.MinValue).ToList();
 
 			return links;
 		}
