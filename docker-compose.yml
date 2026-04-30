@@ -1,11 +1,10 @@
-version: '2'
 services:
   db:
-    image: mariadb:10.1
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
     environment:
-      MYSQL_ROOT_PASSWORD: toor
-      MYSQL_DATABASE: Pote
-      MYSQL_USER: potepote
-      MYSQL_PASSWORD: 123456
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "Your_password123!"
+      MSSQL_PID: "Express"
     ports:
-      - "3306:3306"
+      - "1433:1433"

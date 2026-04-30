@@ -2,4 +2,8 @@
 -----------
 Docker usage
 
-docker run -p 5000:5000 517
+docker-compose up db
+
+dotnet build
+cd src
+dotnet run
