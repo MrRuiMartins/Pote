@@ -22,6 +22,7 @@ namespace src.Controllers
         {
             var link = new InterestingLink
             {
+                Id = Guid.NewGuid().ToString(),
                 Url = url,
                 CreatedAt = DateTimeOffset.UtcNow
             };
