@@ -4,9 +4,9 @@ namespace SimpleTodo.Api;
 
 public class ListsRepository
 {
-    private readonly TodoDb _db;
+    private readonly PoteDbContext _db;
 
-    public ListsRepository(TodoDb db)
+    public ListsRepository(PoteDbContext db)
     {
         _db = db;
     }

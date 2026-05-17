@@ -1,79 +1,43 @@
-﻿using Azure.Identity;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.EntityFrameworkCore;
-using SimpleTodo.Api;
+﻿using System;
+using Azure.Identity;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 
-var builder = WebApplication.CreateBuilder(args);
-
-var keyVaultEndpoint = builder.Configuration["AZURE_KEY_VAULT_ENDPOINT"];
-if (!string.IsNullOrWhiteSpace(keyVaultEndpoint))
+namespace src
 {
-    var credential = new DefaultAzureCredential();
-    builder.Configuration.AddAzureKeyVault(new Uri(keyVaultEndpoint), credential);
-}
-
-builder.Services.AddScoped<ListsRepository>();
-builder.Services.AddDbContext<TodoDb>(options =>
-{
-    var connectionStringKey = builder.Configuration["AZURE_SQL_CONNECTION_STRING_KEY"];
-    if (string.IsNullOrWhiteSpace(connectionStringKey))
+    public class Program
     {
-        throw new InvalidOperationException("AZURE_SQL_CONNECTION_STRING_KEY is not configured.");
+        public static void Main(string[] args)
+        {
+            var host = CreateHostBuilder(args).Build();
+
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("\nPOTE API initialized successfully. Listening at: http://localhost:3100\n");
+            //Console.WriteLine("🔒 Secure Link:  https://localhost:3101");
+            Console.ResetColor();
+
+            host.Run();
+        }
+
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration((context, config) =>
+                {
+                    var bootstrapConfig = config.Build();
+                    var keyVaultEndpoint = bootstrapConfig["AZURE_KEY_VAULT_ENDPOINT"];
+                    
+                    // Note: If you want to guard against future ghost environment variable crashes,
+                    // add: !context.HostingEnvironment.IsDevelopment() here.
+                    if (!string.IsNullOrWhiteSpace(keyVaultEndpoint))
+                    {
+                        var credential = new DefaultAzureCredential();
+                        config.AddAzureKeyVault(new Uri(keyVaultEndpoint), credential);
+                    }
+                })
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseStartup<Startup>();
+                });
     }
-
-    var connectionString = builder.Configuration[connectionStringKey];
-    if (string.IsNullOrWhiteSpace(connectionString))
-    {
-        throw new InvalidOperationException($"Connection string for key '{connectionStringKey}' is not configured.");
-    }
-
-    options.UseSqlServer(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure());
-});
-
-builder.Services.AddDbContext<src.DbModels.InterestingLinkContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("PoteDatabase")));
-
-builder.Services.AddControllersWithViews();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddCors();
-builder.Services.AddApplicationInsightsTelemetry(builder.Configuration);
-
-var app = builder.Build();
-
-await using (var scope = app.Services.CreateAsyncScope())
-{
-    var todoDb = scope.ServiceProvider.GetRequiredService<TodoDb>();
-    await todoDb.Database.EnsureCreatedAsync();
-
-    var linkDb = scope.ServiceProvider.GetRequiredService<src.DbModels.InterestingLinkContext>();
-    await linkDb.Database.EnsureCreatedAsync();
 }
-
-Console.WriteLine("app started");
-
-app.UseCors(policy =>
-{
-    policy.AllowAnyOrigin();
-    policy.AllowAnyHeader();
-    policy.AllowAnyMethod();
-});
-
-app.UseSwaggerUI(options =>
-{
-    options.SwaggerEndpoint("./openapi.yaml", "v1");
-    options.RoutePrefix = "";
-});
-
-app.UseStaticFiles(new StaticFileOptions
-{
-    ServeUnknownFileTypes = true,
-});
-
-app.MapGroup("/lists")
-    .MapTodoApi()
-    .WithOpenApi();
-
-app.MapControllers();
-
-app.Run();

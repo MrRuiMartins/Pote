@@ -10,11 +10,11 @@ namespace src.Controllers
     [Route("[controller]")]
     public class LinkController : Controller
     {
-        private readonly InterestingLinkContext _db;
+        private readonly PoteDbContext _context;
 
-        public LinkController(InterestingLinkContext db)
+        public LinkController(PoteDbContext context)
         {
-            _db = db;
+            _context = context;
         }
         // Post api/links/{url}
         [HttpPost("{url}")]
@@ -27,8 +27,8 @@ namespace src.Controllers
                 CreatedAt = DateTimeOffset.UtcNow
             };
 
-            _db.Links.Add(link);
-            _db.SaveChanges();
+            _context.InterestingLinks.Add(link);
+            _context.SaveChanges();
 
             return new OkResult();
         }
@@ -36,7 +36,7 @@ namespace src.Controllers
         [HttpGet("")]
         public IEnumerable<InterestingLink> Get()
         {
-            return _db.Links.Where(l => l.CreatedAt >= DateTimeOffset.MinValue).ToList();
+            return _context.InterestingLinks.Where(l => l.CreatedAt >= DateTimeOffset.MinValue).ToList();
         }
     }
 }

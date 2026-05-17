@@ -1,57 +1,96 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using src.DbModels;
+using SimpleTodo.Api;
 
 namespace src
 {
     public class Startup
     {
-        public IConfigurationRoot Configuration { get; }
+        public IConfiguration Configuration { get; }
 
-		public Startup(IHostEnvironment env)
-		{
-			var builder = new ConfigurationBuilder()
-            .SetBasePath(env.ContentRootPath)
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-            .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
-            .AddEnvironmentVariables();
-
-            Configuration = builder.Build();
-		}
-
-        // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
+        public Startup(IConfiguration configuration)
         {
-            services.AddSingleton<IConfiguration>(Configuration);
-            services.AddDbContext<InterestingLinkContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("PoteDatabase")));
-            services.AddControllersWithViews();
+            Configuration = configuration;
         }
 
-
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void ConfigureServices(IServiceCollection services)
         {
-            using (var scope = app.ApplicationServices.CreateScope())
+            // Business Logic Repositories
+            services.AddScoped<ListsRepository>();
+
+            // Consolidated Connection String Extraction
+            var azureSqlKey = Configuration["AZURE_SQL_CONNECTION_STRING_KEY"];
+            var connectionString = !string.IsNullOrWhiteSpace(azureSqlKey) 
+                ? Configuration[azureSqlKey] 
+                : null;
+
+            if (string.IsNullOrWhiteSpace(connectionString))
             {
-                var context = scope.ServiceProvider.GetRequiredService<InterestingLinkContext>();
-                context.Database.EnsureCreated();
+                // Local fallback target
+                connectionString = Configuration.GetConnectionString("PoteDatabase");
             }
 
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException("SQL Connection string is missing. Define 'AZURE_SQL_CONNECTION_STRING_KEY' or a local 'PoteDatabase' connection string.");
+            }
+
+            // Register the SINGLE unified database context
+            services.AddDbContext<PoteDbContext>(options =>
+                options.UseSqlServer(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure()));
+
+            // Shared API Feature Stacks
+            services.AddControllersWithViews();
+            services.AddEndpointsApiExplorer();
+            services.AddSwaggerGen();
+            services.AddCors();
+            services.AddApplicationInsightsTelemetry(Configuration);
+        }
+
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            // Database schema automation on startup (Generates all tables at once)
+            using (var scope = app.ApplicationServices.CreateScope())
+            {
+                var poteDb = scope.ServiceProvider.GetRequiredService<PoteDbContext>();
+                poteDb.Database.EnsureCreated();
+            }
+
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+
+            app.UseCors(policy =>
+            {
+                policy.AllowAnyOrigin();
+                policy.AllowAnyHeader();
+                policy.AllowAnyMethod();
+            });
+
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("./openapi.yaml", "v1");
+                options.RoutePrefix = ""; // Roots Swagger UI directly to http://localhost:XXXX/
+            });
+
+            app.UseStaticFiles(new StaticFileOptions { ServeUnknownFileTypes = true });
             app.UseRouting();
             app.UseAuthorization();
+
             app.UseEndpoints(endpoints =>
             {
+                // Map the Azure template's Minimal APIs cleanly
+                endpoints.MapGroup("/lists")
+                         .MapTodoApi()
+                         .WithOpenApi();
+
+                // Map your hobby project's traditional controllers
                 endpoints.MapControllers();
             });
         }
