@@ -60,6 +60,18 @@ namespace Engine.Core
             board[rank * 8 + file] = piece;
         }
 
+        public void LoadPosition(string fen)
+        {
+            // rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1
+            // 1 rank for every / starting from rank 8
+            // b -> black to move
+            // KQkq -> castling rights
+            // e3 (empty is -) -> en passant square
+            // 0 -> Halfmove clock
+            // 1 -> Fullmove number
+            
+        }
+
         public string PrintBoard()
         {
             var printedBoard = string.Empty;
