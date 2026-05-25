@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using src.DbModels;
+using Pote.DbModels;
 
-namespace src.Controllers
+namespace Pote.Controllers
 {
     [Route("[controller]")]
     public class LinkController : Controller

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
 
-namespace SimpleTodo.Api
+namespace Pote
 {
     public static class TodoEndpointsExtensions
     {

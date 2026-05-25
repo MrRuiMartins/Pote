@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace SimpleTodo.Api;
+namespace Pote;
 
 public class ListsRepository
 {

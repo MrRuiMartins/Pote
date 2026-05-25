@@ -5,9 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using SimpleTodo.Api;
 
-namespace src
+namespace Pote
 {
     public class Startup
     {

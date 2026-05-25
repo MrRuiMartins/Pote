@@ -1,6 +1,6 @@
 using System;
 
-namespace src.DbModels
+namespace Pote.DbModels
 {
     public class InterestingLink
     {
