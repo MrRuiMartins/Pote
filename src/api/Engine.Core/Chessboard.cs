@@ -16,7 +16,6 @@ namespace Engine.Core
         private const byte QUEEN_BLACK = 133;
         private const byte KING_BLACK = 134;
         
-
         private static byte[] START_POSITION =
         [
             ROOK_WHITE, KNIGHT_WHITE, BISHOP_WHITE, QUEEN_WHITE, KING_WHITE, BISHOP_WHITE, KNIGHT_WHITE, ROOK_WHITE, // rank 1
@@ -38,16 +37,27 @@ namespace Engine.Core
         6 -> King (K/k)
         bit 7 = Black/White
         */
-        private byte[] board;
-        /* Missing
-        - turn (white or black)
-        - castling rights
-        - en passant square
-        */
+        private byte[] board = START_POSITION;
+        private Player player; 
+        private string castlingAvailability = "KQkq";
+        private string enPassantSquare = "-";
+        private int halfmoveClock;
+        private int fullmoveNumber;
         
         public Chessboard()
         {
             board = START_POSITION;
+            player = Player.White;
+            castlingAvailability = "KQkq";
+            enPassantSquare = "-";
+            halfmoveClock = 0;
+            fullmoveNumber = 1;
+
+        }
+
+        public Chessboard(string fen)
+        {
+            this.LoadFen(fen);
         }
 
         public byte GetSquare(int rank, int file)
@@ -60,7 +70,7 @@ namespace Engine.Core
             board[rank * 8 + file] = piece;
         }
 
-        public void LoadPosition(string fen)
+        public void LoadFen(string fen)
         {
             // rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1
             // 1 rank for every / starting from rank 8
@@ -69,6 +79,28 @@ namespace Engine.Core
             // e3 (empty is -) -> en passant square
             // 0 -> Halfmove clock
             // 1 -> Fullmove number
+
+            var fenParts = fen.Split(' ');
+
+            var position = fenParts[0];
+            this.board = loadFenBoardPosition(position.ToCharArray());
+
+        
+            var playerToMove = fenParts[1];
+            this.player = playerToMove == "w"? Player.White : Player.Black;
+
+            var castlingRights = fenParts[2];
+            this.castlingAvailability = castlingRights;
+
+            var enPassantSquare = fenParts[3];
+            this.enPassantSquare = enPassantSquare;
+
+            var halfmoveClock = fenParts[4];
+            this.halfmoveClock = Int32.Parse(halfmoveClock);
+
+            var fullmoveNumber = fenParts[5];
+            this.fullmoveNumber = Int32.Parse(fullmoveNumber);
+
             
         }
 
@@ -89,6 +121,74 @@ namespace Engine.Core
             printedBoard += "  abcdefgh\n";
 
             return printedBoard;
+        }
+
+        /*
+          input: "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
+          output: byte[] = [ROOK_BLACK, KNNIGHT_BLACK,... EMPTY_SQUARE, EMPTY_SQUARE, EMPTY_SQUARE..., PAWN_WHITE]
+        */
+        private byte[] loadFenBoardPosition(char[] fenPosition)
+        {
+            var bytePosition = new byte[64];
+            
+            int index = 0;
+            foreach(char c in fenPosition)
+            {
+                if (c == '/') {
+                    continue;
+                }
+                if (Char.IsNumber(c))
+                {
+                    int curr = 0;
+                    double numEmptySquares = Char.GetNumericValue(c);
+                    while (curr < numEmptySquares)
+                    {
+                        curr++;
+                        bytePosition[index++] = EMPTY_SQUARE;
+                    }
+                } else
+                {
+                    bytePosition[index++] = ParseFenCharToByte(c);
+                }
+            }
+            return bytePosition;
+        }
+
+        private byte ParseFenCharToByte(char c)
+        {
+            switch(c)
+            {
+                case 'P':
+                    return PAWN_WHITE;
+                case 'N':
+                    return KNIGHT_WHITE;
+                case 'B':
+                    return BISHOP_WHITE;
+                case 'R':
+                    return ROOK_WHITE;
+                case 'Q':
+                    return QUEEN_WHITE;
+                case 'K':
+                    return KING_WHITE;
+                
+                case 'p':
+                    return PAWN_BLACK;
+                case 'n':
+                    return KNIGHT_BLACK;
+                case 'b':
+                    return BISHOP_BLACK;
+                case 'r':
+                    return ROOK_BLACK;
+                case 'q':
+                    return QUEEN_BLACK;
+                case 'k':
+                    return KING_BLACK;
+
+                case ' ':
+                    return EMPTY_SQUARE;
+                default:
+                    throw new Exception($"Invalid char in fen: {c}");
+            }
         }
 
         private char PrintSquare(byte square)
