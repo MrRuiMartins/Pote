@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace Engine.Core
 {
     public class Chessboard
@@ -55,6 +57,16 @@ namespace Engine.Core
 
         }
 
+        public Chessboard(byte[] position, Player player)
+        {
+            this.board = position;
+            this.player = player;
+            this.castlingAvailability = "KQkq";
+            this.enPassantSquare = "-";
+            this.halfmoveClock = 0;
+            this.fullmoveNumber = 1;
+        }
+
         public Chessboard(string fen)
         {
             this.LoadFen(fen);
@@ -70,6 +82,165 @@ namespace Engine.Core
             board[rank * 8 + file] = piece;
         }
 
+        public void GetMoves()
+        {
+            var boards = GetKnightMoves();
+            foreach(var b in boards)
+            {
+                b.PrintBoard();
+            }
+        }
+
+        // TODO: So far only returns the moves of the first knight found.
+
+        // TODO: There should be a difference between GetMoves and MakeMove.
+        //       Currently we do GetKnightMoves, and it finds a move, copies 
+        // the chessboard into a new one, and makes the move in the new board.
+        // But I think it should be another way of "getting" the moves without 
+        // making the move, no?
+        public List<Chessboard> GetKnightMoves()
+        {
+            // scan the board until a knight of the current player is found
+            for (int i = 0; i < 63; i++)
+            {
+                var squareContent = board[i];
+                if (IsKnightOfPlayer(squareContent))
+                {
+                    // found a position with a knight
+                    // find the max 8 possible moves and return them
+                    return MakeKnightMoves(i);
+                }
+            }
+            return new List<Chessboard>();
+        }
+
+        public List<Chessboard> MakeKnightMoves(int squareNumber)
+        {
+            List<Chessboard> boards = new List<Chessboard>();
+            var rank = GetRankOfSquare(squareNumber);
+            var file = GetFileOfSquare(squareNumber);
+            // possible knight moves are:
+             // - rank +- 1, file +- 2
+             // - rank +- 2, file +- 1
+            if (IsValidRankAndFile(rank + 1, file + 2) &&
+                !HasPieceOfCurrentPlayer(GetPositionOf(rank + 1, file + 2)))
+            {
+                boards.Add(MakeMove(squareNumber, GetPositionOf(rank + 1, file + 2)));
+            }
+            if (IsValidRankAndFile(rank + 1, file - 2) &&
+                !HasPieceOfCurrentPlayer(GetPositionOf(rank + 1, file - 2)))
+            {
+                boards.Add(MakeMove(squareNumber, GetPositionOf(rank + 1, file - 2)));
+            }
+            if (IsValidRankAndFile(rank - 1, file + 2) &&
+                !HasPieceOfCurrentPlayer(GetPositionOf(rank - 1, file + 2)))
+            {
+                boards.Add(MakeMove(squareNumber, GetPositionOf(rank - 1, file + 2)));
+            }
+            if (IsValidRankAndFile(rank - 1, file - 2) &&
+                !HasPieceOfCurrentPlayer(GetPositionOf(rank - 1, file - 2)))
+            {
+                boards.Add(MakeMove(squareNumber, GetPositionOf(rank - 1, file - 2)));
+
+            }
+            if (IsValidRankAndFile(rank + 2, file + 1) &&
+                !HasPieceOfCurrentPlayer(GetPositionOf(rank + 2, file + 1)))
+            {
+                boards.Add(MakeMove(squareNumber, GetPositionOf(rank + 2, file + 1)));
+            }
+            if (IsValidRankAndFile(rank + 2, file - 1) &&
+                !HasPieceOfCurrentPlayer(GetPositionOf(rank + 2, file - 1)))
+            {
+                boards.Add(MakeMove(squareNumber, GetPositionOf(rank + 2, file - 1)));
+            }
+            if (IsValidRankAndFile(rank - 2, file + 1) &&
+                !HasPieceOfCurrentPlayer(GetPositionOf(rank - 2, file + 1)))
+            {
+                boards.Add(MakeMove(squareNumber, GetPositionOf(rank - 2, file + 1)));
+            }
+            if (IsValidRankAndFile(rank - 2, file - 1) &&
+                !HasPieceOfCurrentPlayer(GetPositionOf(rank - 2, file - 1)))
+            {
+                boards.Add(MakeMove(squareNumber, GetPositionOf(rank - 2, file - 1)));
+            }
+
+            return boards;
+        }
+
+        /// <summary>
+        /// Moves the piece from start square to end square.
+        /// board.
+        /// </summary>
+        /// <param name="startSquare"></param>
+        /// <param name="endSquare"></param>
+        /// <exception cref="Exception"></exception>
+        public Chessboard MakeMove(int startSquare, int endSquare)
+        {
+            if (startSquare < 0 || startSquare > 63 || endSquare < 0 || endSquare > 63)
+            {
+                throw new Exception($"Either start square {startSquare} or end square {endSquare} is out of bounds.");
+            }
+
+            if (!HasPieceOfCurrentPlayer(startSquare))
+            {
+                throw new Exception($"Cannot make move. Start square {startSquare} does not have a piece current player.");
+            }
+
+            Chessboard newBoard = Copy();
+            newBoard.board[endSquare] = newBoard.board[startSquare];
+            newBoard.board[startSquare] = EMPTY_SQUARE;
+            newBoard.player = newBoard.player == Player.White? Player.Black : Player.White;
+
+            return newBoard;
+        }
+
+        public bool IsValidRankAndFile(int rank, int file)
+        {
+            return rank >= 0 && rank <= 7 && file >=0 && file <= 7; 
+        }
+
+        /// <summary>
+        /// Returns true if the specific square has a piece belonging to the current player; otherwise, false.
+        /// </summary>
+        /// <param name="square"></param>
+        /// <returns></returns>
+        public bool HasPieceOfCurrentPlayer(int square)
+        {
+            if (player == Player.White)
+            {
+                return board[square] == PAWN_WHITE ||
+                    board[square] == KNIGHT_WHITE ||
+                    board[square] == BISHOP_WHITE ||
+                    board[square] == ROOK_WHITE ||
+                    board[square] == QUEEN_WHITE ||
+                    board[square] == KING_WHITE;
+            } else
+            {
+                return board[square] == PAWN_BLACK ||
+                    board[square] == KNIGHT_BLACK ||
+                    board[square] == BISHOP_BLACK ||
+                    board[square] == ROOK_BLACK ||
+                    board[square] == QUEEN_BLACK ||
+                    board[square] == KING_BLACK;
+            }
+        }
+
+        public bool IsKnightOfPlayer(byte pos)
+        {
+            if (player == Player.White)
+            {
+                return pos == KNIGHT_WHITE;
+            } else
+            {
+                return pos == KNIGHT_BLACK;
+            }
+        }
+
+        public Chessboard Copy()
+        {
+            return new Chessboard(this.board, this.player);
+        }
+
         public void LoadFen(string fen)
         {
             // rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1
@@ -83,7 +254,7 @@ namespace Engine.Core
             var fenParts = fen.Split(' ');
 
             var position = fenParts[0];
-            this.board = loadFenBoardPosition(position.ToCharArray());
+            this.board = loadFenBoardPosition(position);
 
         
             var playerToMove = fenParts[1];
@@ -124,33 +295,82 @@ namespace Engine.Core
         }
 
         /*
+            int square : a square on the board from 0 to 63.
+            The rank is the horizontal lines.
+            e.g. Pawns on rank 2 and 7 in start position.
+            Returns the rank of the square from 0 to 7.
+        */
+        public int GetRankOfSquare(int square)
+        {
+            // square 0 is a white rook -> that's rank 0
+            // square 1 is a white rook -> that's rank 0
+            // square 63 -> rank 7
+            return square / 8;
+        }
+
+        /// <summary>
+        /// Gets the position (0 to 63) of the specified rank and file.
+        /// </summary>
+        /// <param name="rank">0 to 7</param>
+        /// <param name="file">0 to 7</param>
+        /// <returns>
+        /// Returns the position of the rank and file (0 to 63).
+        /// </returns>
+        public int GetPositionOf(int rank, int file)
+        {
+            if (rank < 0 || rank > 7 || file < 0 || file > 7)
+            {
+                throw new Exception($"Position rank {rank} file {file} is out of bounds.");
+            }
+            return 8 * rank + file;
+        }
+
+        /*
+            int square : a square on the board from 0 to 63
+            The file is the vertical lines. 
+            e.g. Rooks on file 1 and 8 in start position.
+            Returns the file of the square from 0 to 7.
+        */
+        public int GetFileOfSquare(int square)
+        {
+            // square 0 is a white rook -> that's file 1
+            // square 1 is a white rook -> that's file 2
+            // square 23 -> rank 3
+            return square % 8;
+        }
+
+        /*
           input: "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
           output: byte[] = [ROOK_BLACK, KNNIGHT_BLACK,... EMPTY_SQUARE, EMPTY_SQUARE, EMPTY_SQUARE..., PAWN_WHITE]
         */
-        private byte[] loadFenBoardPosition(char[] fenPosition)
+        private byte[] loadFenBoardPosition(string fenPosition)
         {
-            var bytePosition = new byte[64];
-            
+            var bytePosition = new byte[64];            
             int index = 0;
-            foreach(char c in fenPosition)
+
+            var rows = fenPosition.Split('/');
+
+            for (int i = rows.Length - 1; i >= 0 ; i--)
             {
-                if (c == '/') {
-                    continue;
-                }
-                if (Char.IsNumber(c))
+                var row = rows[i];
+                foreach(char c in row)
                 {
-                    int curr = 0;
-                    double numEmptySquares = Char.GetNumericValue(c);
-                    while (curr < numEmptySquares)
+                    if (Char.IsNumber(c))
                     {
-                        curr++;
-                        bytePosition[index++] = EMPTY_SQUARE;
+                        int curr = 0;
+                        double numEmptySquares = Char.GetNumericValue(c);
+                        while (curr < numEmptySquares)
+                        {
+                            curr++;
+                            bytePosition[index++] = EMPTY_SQUARE;
+                        }
+                    } else
+                    {
+                        bytePosition[index++] = ParseFenCharToByte(c);
                     }
-                } else
-                {
-                    bytePosition[index++] = ParseFenCharToByte(c);
                 }
             }
+            
             return bytePosition;
         }
 
