@@ -87,12 +87,11 @@ namespace Engine.Core
             var boards = GetKnightMoves();
             foreach(var b in boards)
             {
-                b.PrintBoard();
+                Console.WriteLine(b.PrintBoard());
             }
         }
 
         // TODO: So far only returns the moves of the first knight found.
-
         // TODO: There should be a difference between GetMoves and MakeMove.
         //       Currently we do GetKnightMoves, and it finds a move, copies 
         // the chessboard into a new one, and makes the move in the new board.
@@ -238,7 +237,7 @@ namespace Engine.Core
 
         public Chessboard Copy()
         {
-            return new Chessboard(this.board, this.player);
+            return new Chessboard((byte[])this.board.Clone(), this.player);
         }
 
         public void LoadFen(string fen)
