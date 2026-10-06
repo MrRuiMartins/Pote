@@ -91,7 +91,6 @@ namespace Engine.Core
             }
         }
 
-        // TODO: So far only returns the moves of the first knight found.
         // TODO: There should be a difference between GetMoves and MakeMove.
         //       Currently we do GetKnightMoves, and it finds a move, copies 
         // the chessboard into a new one, and makes the move in the new board.
@@ -99,6 +98,7 @@ namespace Engine.Core
         // making the move, no?
         public List<Chessboard> GetKnightMoves()
         {
+            var moves = new List<Chessboard>();
             // scan the board until a knight of the current player is found
             for (int i = 0; i < 63; i++)
             {
@@ -107,10 +107,10 @@ namespace Engine.Core
                 {
                     // found a position with a knight
                     // find the max 8 possible moves and return them
-                    return MakeKnightMoves(i);
+                    moves.AddRange(MakeKnightMoves(i));
                 }
             }
-            return new List<Chessboard>();
+            return moves;
         }
 
         public List<Chessboard> MakeKnightMoves(int squareNumber)
