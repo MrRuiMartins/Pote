@@ -91,11 +91,6 @@ namespace Engine.Core
             }
         }
 
-        // TODO: There should be a difference between GetMoves and MakeMove.
-        //       Currently we do GetKnightMoves, and it finds a move, copies 
-        // the chessboard into a new one, and makes the move in the new board.
-        // But I think it should be another way of "getting" the moves without 
-        // making the move, no?
         public List<Chessboard> GetKnightMoves()
         {
             var moves = new List<Chessboard>();
